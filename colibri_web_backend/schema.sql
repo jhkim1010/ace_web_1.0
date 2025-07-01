@@ -15,6 +15,8 @@ CREATE TABLE users (
     username VARCHAR(255) NOT NULL,
     ref_id_company INTEGER NOT NULL,
     password VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN DEFAULT FALSE, -- 관리자 권한 (기본값: FALSE)
+    auto_logout_time INTEGER DEFAULT 240, -- 자동 로그아웃 시간 (분 단위, 기본값 4시간)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(username, ref_id_company),
     CONSTRAINT fk_users_company FOREIGN KEY (ref_id_company) REFERENCES companies(id) ON DELETE CASCADE
