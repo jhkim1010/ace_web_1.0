@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "install-all": "npm install && cd colibri_web_backend && npm install && cd ../colibri_web_frontend && npm install",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client\"",
     "server": "cd colibri_web_backend && npm start",
+    "server:dev": "cd colibri_web_backend && npm run dev",
     "client": "cd colibri_web_frontend && npm start",
     "build": "cd colibri_web_frontend && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
