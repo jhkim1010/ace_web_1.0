@@ -190,6 +190,141 @@ app.post('/api/logout', authenticateToken, (req, res) => {
   res.json({ success: true, message: '로그아웃되었습니다.' });
 });
 
+// ===================== 고객(Customer) API =====================
+
+// 고객 전체 목록 조회
+app.get('/api/customers', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM customers ORDER BY id DESC');
+    res.json({ success: true, customers: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// 고객 추가
+app.post('/api/customers', async (req, res) => {
+  const {
+    nickname, cuit, first_name, last_name, phone1, phone2, address, city, state, country,
+    transportation, salesperson, email, memo, f_total_deuda = 0
+  } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO customers (nickname, cuit, first_name, last_name, phone1, phone2, address, city, state, country, transportation, salesperson, email, memo, f_total_deuda)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+       RETURNING *`,
+      [nickname, cuit, first_name, last_name, phone1, phone2, address, city, state, country, transportation, salesperson, email, memo, f_total_deuda]
+    );
+    res.json({ success: true, customer: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// 고객 수정
+app.put('/api/customers/:id', async (req, res) => {
+  const id = req.params.id;
+  const {
+    nickname, cuit, first_name, last_name, phone1, phone2, address, city, state, country,
+    transportation, salesperson, email, memo, f_total_deuda
+  } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE customers SET nickname=$1, cuit=$2, first_name=$3, last_name=$4, phone1=$5, phone2=$6, address=$7, city=$8, state=$9, country=$10, transportation=$11, salesperson=$12, email=$13, memo=$14, f_total_deuda=$15 WHERE id=$16 RETURNING *`,
+      [nickname, cuit, first_name, last_name, phone1, phone2, address, city, state, country, transportation, salesperson, email, memo, f_total_deuda, id]
+    );
+    res.json({ success: true, customer: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// 고객 상세 조회
+app.get('/api/customers/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const result = await pool.query('SELECT * FROM customers WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: '고객을 찾을 수 없습니다.' });
+    }
+    res.json({ success: true, customer: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// 고객 삭제 (선택)
+app.delete('/api/customers/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    await pool.query('DELETE FROM customers WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// ===================== 국가(Nations) API =====================
+
+// 국가 전체 목록 조회
+app.get('/api/nations', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM nations ORDER BY name_en');
+    res.json({ success: true, nations: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// 국가별 주 목록 조회
+app.get('/api/nations/:nationId/states', async (req, res) => {
+  const nationId = req.params.nationId;
+  try {
+    const result = await pool.query('SELECT * FROM states WHERE ref_id_nation = $1 ORDER BY name', [nationId]);
+    res.json({ success: true, states: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// ===================== 주(States) API =====================
+
+// 주 전체 목록 조회
+app.get('/api/states', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT s.*, n.name_en as nation_name 
+      FROM states s 
+      JOIN nations n ON s.ref_id_nation = n.id 
+      ORDER BY n.name_en, s.name
+    `);
+    res.json({ success: true, states: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// ===================== 판매원(Vendedores) API =====================
+
+// 판매원 전체 목록 조회
+app.get('/api/vendedores', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM vendedores ORDER BY name');
+    res.json({ success: true, vendedores: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 }); 
